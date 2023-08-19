@@ -38,12 +38,14 @@ const key_value_map_t button1_map[] =
 ```c
 button_init(&button1, read_button1_pin, 0, 0, button1_map, ARRAY_SIZE(button1_map));
 ```
-4. 启动按键
+
+4.启动按键
 
 ```c
 button_start(&button1);
 ```
-5. 设置一个5ms间隔的定时器循环调用按键后台处理函数
+
+5.设置一个5ms间隔的定时器循环调用按键后台处理函数
 
 ```c
 while(1) {
