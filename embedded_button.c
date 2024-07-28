@@ -3,6 +3,9 @@
 
 static struct button_obj_t* button_list_head = NULL;
 
+#ifdef EB_DEBUG_PRINTF
+static void debug_print_binary(uint32_t num);
+#endif
 /**
   * @brief  Initializes the button struct.
   * @param  button: the button strcut.
@@ -13,12 +16,12 @@ static struct button_obj_t* button_list_head = NULL;
   * @param  map_size: map size
   * @retval None
   */
-void button_init(struct button_obj_t* button            , \
-                 uint8_t(*read_button_func_ptr)(uint8_t), \
-                 uint8_t active_level                   , \
-                 uint8_t button_id                      , \
-                 const key_value_map_t *map_ptr         , \
-                 size_t map_size                          \
+void button_init(struct button_obj_t* button            ,       \
+                 uint8_t(*read_button_func_ptr)(uint8_t),       \
+                 uint8_t active_level                   ,       \
+                 uint8_t button_id                      ,       \
+                 const key_value_match_map_t *kv_match_map_ptr, \
+                 size_t map_size                                \
                  )
 {
     memset(button, 0, sizeof(struct button_obj_t));
@@ -27,7 +30,7 @@ void button_init(struct button_obj_t* button            , \
     button->read_level = button->_read_button_func_ptr(button_id);
     button->active_level = active_level;
     button->id = button_id;
-    button->map_ptr = map_ptr;
+    button->kv_match_map_ptr = kv_match_map_ptr;
     button->map_size = map_size;
 }
 
@@ -66,11 +69,27 @@ static uint8_t __check_if_the_bits_match(key_value_type_t *state_bits, key_value
     return (((*state_bits) & mask) == target? 1 : 0);
 }
 
+uint8_t check_is_repeat_click_mode(struct button_obj_t* button)
+{
+    key_value_type_t kv_input = button->key_value;
+
+    /* Check if the two least significant bits form 0b10 */
+    if((kv_input & 0b11) != 0b10)
+        return 0;
+
+    /* Calculate the XOR result */
+    key_value_type_t xor_result = kv_input ^ (kv_input >> 1);
+
+    /* Check if xor_result + 1 is a power of 2
+       This means all bits except the least significant one are 1 */
+    return (xor_result != 0) && (((xor_result + 1) & (xor_result - 1)) == 0);
+}
+
 /**
   * @brief  Button driver core function, driven by 2 principles
   *         1. As long as the key value is not zero, the time tick++
   *         2. As long as the button status changes,
-                    add a bit£¨1: press, 0: release£©and
+                    add a bit (1: press, 0: release) and
                     reset tick time (ensure that the tick is the time it was pressed or raised)
   * @param  handle: the button handle strcut.
   * @retval None
@@ -129,12 +148,33 @@ void button_handler(struct button_obj_t* button)
     if((button->state_bits) && (button->event_analyze_en)) {
         // button event processing
         button->key_value = button->state_bits;
+#ifdef EB_DEBUG_PRINTF
+        debug_print_binary(button->key_value);
+#endif
 
         for(size_t i = 0; i < button->map_size; i++) {
-            if((button->map_ptr[i].key_value == button->key_value)
-            && (button->map_ptr[i].kv_func_cb))
+            if(button->kv_match_map_ptr[i].kv_func_cb == NULL)
+                continue;
+
+            key_value_type_t operand_origin = button->kv_match_map_ptr[i].operand;
+            key_value_type_t operand_result = button->kv_match_map_ptr[i].operand;
+            kv_match_operator_type_t operator =button->kv_match_map_ptr[i].operator;
+            key_value_type_t tar_result = button->kv_match_map_ptr[i].tar_result;
+
+            if(operator == KV_MATCH_OPERATOR_NULL)
+                operand_result = button->key_value;
+            else if(operator & KV_MATCH_OPERATOR_BITWISE_AND)
+                operand_result = (operand_origin & button->key_value);
+            else if(operator & KV_MATCH_OPERATOR_BITWISE_OR)
+                operand_result = (operand_origin | button->key_value);
+            else if(operator & KV_MATCH_OPERATOR_BITWISE_NOT)
+                operand_result = ~(button->key_value);
+            else if(operator & KV_MATCH_OPERATOR_BITWISE_XOR)
+                operand_result = (operand_origin ^ button->key_value);
+
+            if(operand_result == tar_result)
             {
-                button->map_ptr[i].kv_func_cb(button);
+                button->kv_match_map_ptr[i].kv_func_cb(button);
             }
         }
 
@@ -196,3 +236,33 @@ void button_ticks()
         button_handler(target);
     }
 }
+
+/**
+  * @brief  Debugging function, print the input decimal number in binary format.
+  * @param  None.
+  * @retval None
+  */
+#ifdef EB_DEBUG_PRINTF
+static void debug_print_binary(uint32_t num) {
+    if (num == 0) {
+        EB_DEBUG_PRINTF("0b0 \r\n");
+        return;
+    }
+
+    EB_DEBUG_PRINTF("0b");
+    int printed = 0;
+    for (int i = 31; i >= 0; i--) {
+        if ((num >> i) & 1) {
+            EB_DEBUG_PRINTF("1");
+            printed = 1;
+        } else if (printed) {
+            EB_DEBUG_PRINTF("0");
+        }
+    }
+    if (!printed) {
+        EB_DEBUG_PRINTF("0");
+    }
+
+    EB_DEBUG_PRINTF("\r\n");
+}
+#endif

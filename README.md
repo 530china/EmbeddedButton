@@ -11,20 +11,30 @@ struct button_obj_t button1;
 2.建立键值映射表(设置回调事件)
 
 ```c
-const key_value_map_t button1_map[] =
+const key_value_match_map_t button1_map[] =
 {
     {
-        .key_value = SINGLE_CLICK_KV,
-        .kv_func_cb = single_press_handle
+        .tar_result = SINGLE_CLICK_KV,
+        .kv_func_cb = single_click_handle
     },
     {
-        .key_value = LONG_PRESEE_START,
+        .tar_result = DOUBLE_CLICK_KV,
+        .kv_func_cb = double_click_handle
+    },
+    {
+        .tar_result = LONG_PRESEE_START,
         .kv_func_cb = long_press_handle
     },
     {
-        .key_value = SINGLE_CLICK_THEN_LONG_PRESS_KV,
-        .kv_func_cb = single_press_then_long_press_handle
+        .tar_result = SINGLE_CLICK_THEN_LONG_PRESS_KV,
+        .kv_func_cb = single_click_then_long_press_handle
     },
+    {
+        .operand = 0b1010101010,
+        .operator = KV_MATCH_OPERATOR_BITWISE_AND,
+        .tar_result = 0b1010101010,
+        .kv_func_cb = quintuple_click_handle
+    }
 };
 ```
 3.初始化按键对象，参数含义分别为
@@ -83,54 +93,42 @@ while(1) {
 > 3.利用数据驱动思想完成对应按键事件的调用：
 ```c
 typedef struct {
-    key_value_type_t key_value;
+    key_value_type_t operand;
+    kv_match_operator_type_t operator;
+    key_value_type_t tar_result;
     void (*kv_func_cb)(void*);
-} key_value_map_t;
+} key_value_match_map_t;
 
-const key_value_map_t button1_map[] =
-{
-    {
-        .key_value = SINGLE_CLICK_KV,
-        .kv_func_cb = single_press_handle
-    },
-    {
-        .key_value = LONG_PRESEE_START,
-        .kv_func_cb = long_press_handle
-    },
-    {
-        .key_value = SINGLE_CLICK_THEN_LONG_PRESS_KV,
-        .kv_func_cb = single_press_then_long_press_handle
-    },
-};
 
 for(size_t i = 0; i < button->map_size; i++) {
-    if((button->map_ptr[i].key_value == button->key_value)
-    && (button->map_ptr[i].kv_func_cb))
+    if(button->kv_match_map_ptr[i].kv_func_cb == NULL)
+        continue;
+
+    key_value_type_t operand_origin = button->kv_match_map_ptr[i].operand;
+    key_value_type_t operand_result = button->kv_match_map_ptr[i].operand;
+    kv_match_operator_type_t operator =button->kv_match_map_ptr[i].operator;
+    key_value_type_t tar_result = button->kv_match_map_ptr[i].tar_result;
+
+    if(operator == KV_MATCH_OPERATOR_NULL)
+        operand_result = button->key_value;
+    else if(operator & KV_MATCH_OPERATOR_BITWISE_AND)
+        operand_result = (operand_origin & button->key_value);
+    else if(operator & KV_MATCH_OPERATOR_BITWISE_OR)
+        operand_result = (operand_origin | button->key_value);
+    else if(operator & KV_MATCH_OPERATOR_BITWISE_NOT)
+        operand_result = ~(button->key_value);
+    else if(operator & KV_MATCH_OPERATOR_BITWISE_XOR)
+        operand_result = (operand_origin ^ button->key_value);
+
+    if(operand_result == tar_result)
     {
-        button->map_ptr[i].kv_func_cb(button);
+        button->kv_match_map_ptr[i].kv_func_cb(button);
     }
 }
 ```
 
-> 4.基于面向对象方式设计思路，每个按键对象单独用一份数据结构管理：
+> 4.基于面向对象方式设计思路，每个按键对象单独用一份数据结构管理
 
-```c
-typedef struct button_obj_t {
-    uint8_t  debounce_cnt : 4;
-    uint8_t  active_level : 1;
-    uint8_t  read_level : 1;
-    uint8_t  read_level_update : 1;
-    uint8_t  event_analyze_en : 1;
-    uint8_t  id;
-    uint16_t ticks;
-    state_bits_type_t state_bits;
-    key_value_type_t key_value;
-    uint8_t  (*_read_button_func_ptr)(uint8_t button_id_);
-    const key_value_map_t *map_ptr;
-    size_t map_size;
-    struct button_obj_t* next;
-}button_obj_t;
-```
 
 ## Examples
 
@@ -180,33 +178,36 @@ void single_click_then_long_press_handle(void* btn)
     printf("/****single click and long press****/\r\n");
 }
 
-void double_click_then_long_press_handle(void* btn)
+void quintuple_click_handle(void* btn)
 {
     //do something...
-    printf("/****double click and long press****/\r\n");
+    if(check_is_repeat_click_mode(btn))
+        printf("/****quintuple click****/\r\n");
 }
 
-const key_value_map_t button1_map[] =
+const key_value_match_map_t button1_map[] =
 {
     {
-        .key_value = SINGLE_CLICK_KV,
+        .tar_result = SINGLE_CLICK_KV,
         .kv_func_cb = single_click_handle
     },
     {
-        .key_value = DOUBLE_CLICK_KV,
+        .tar_result = DOUBLE_CLICK_KV,
         .kv_func_cb = double_click_handle
     },
     {
-        .key_value = LONG_PRESEE_START,
+        .tar_result = LONG_PRESEE_START,
         .kv_func_cb = long_press_handle
     },
     {
-        .key_value = SINGLE_CLICK_THEN_LONG_PRESS_KV,
+        .tar_result = SINGLE_CLICK_THEN_LONG_PRESS_KV,
         .kv_func_cb = single_click_then_long_press_handle
     },
     {
-        .key_value = DOUBLE_CLICK_THEN_LONG_PRESS_KV,
-        .kv_func_cb = double_click_then_long_press_handle
+        .operand = 0b1010101010,
+        .operator = KV_MATCH_OPERATOR_BITWISE_AND,
+        .tar_result = 0b1010101010,
+        .kv_func_cb = quintuple_click_handle
     }
 };
 ...
