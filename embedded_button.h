@@ -31,7 +31,9 @@ typedef uint8_t kv_match_operator_type_t;
 #define KV_MATCH_OPERATOR_BITWISE_NOT      (1 << 2)
 #define KV_MATCH_OPERATOR_BITWISE_XOR      (1 << 2)
 
+#ifndef ARRAY_SIZE
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
+#endif
 
 typedef struct {
     key_value_type_t operand;
