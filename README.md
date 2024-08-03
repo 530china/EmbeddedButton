@@ -16,22 +16,22 @@
 </p>
 
  <p text-align="">
-    <a href="./docs/README_zh-CN.md">[¼òÌåÖÐÎÄ]</a>
+    <a href="./docs/README_zh-CN.md">[ç®€ä½“ä¸­æ–‡]</a>
 </p>
 
-<h2>? Introduction</h2>
+<h2>ðŸ‘‹ Introduction</h2>
 EmbeddedButton is a lightweight and easy-to-use embedded key driver module that allows for unlimited expansion of buttons;
 
-- Supports multiple types of key events, including multi-tap, long press, short press followed by long press, and more£»
+- Supports multiple types of key events, including multi-tap, long press, short press followed by long press, and moreï¼›
 - The module implements the entire code logic based on a few simple principles;
-- Core processing adopts a data-driven approach, supporting bitwise operations for key value matching. It only includes basic key value definitions internally, while other key values' meanings are defined by users through **configuring key value matching rules**, without the need to modify the code intrusively, providing great flexibility.£»
+- Core processing adopts a data-driven approach, supporting bitwise operations for key value matching. It only includes basic key value definitions internally, while other key values' meanings are defined by users through **configuring key value matching rules**, without the need to modify the code intrusively, providing great flexibility.ï¼›
 
-## ? Feature
+## ðŸŒ± Feature
 
 > 1.Relying on just a few simple principles, it supports the entire logic for button judgment.
 - As long as the key value is non-zero,tick++
-- Whenever the button state changes, update the key value once£¨**__append_bit()**£©,and reset the tick(to ensure the tick represents the time of press or release)
-- The length of the tick time and the button release are used as criteria to determine the end of a state, which enables good implementation of operations such as short press and long press.£»
+- Whenever the button state changes, update the key value onceï¼ˆ**__append_bit()**ï¼‰,and reset the tick(to ensure the tick represents the time of press or release)
+- The length of the tick time and the button release are used as criteria to determine the end of a state, which enables good implementation of operations such as short press and long press.ï¼›
 
 > 2.Implemented in C language, it cleverly uses bitwise operations to represent each button's key value in binary form, where 1 indicates a press and 0 indicates a release.
 
@@ -94,9 +94,9 @@ if(operand_result == tar_result)
 
 > 4.Designed based on an object-oriented approach, each button object is managed by its own instance of a data structure.
 
-## ? Getting Started
+## ðŸ“‹ Getting Started
 
-### 1£©How to use
+### 1ï¼‰How to use
 <details>
 <summary>Click to expand/collapse C code<img src="https://media.giphy.com/media/WUlplcMpOCEmTGBtBW/giphy.gif" width="30"></summary>
 
@@ -211,7 +211,7 @@ int main()
 ![Alt text](image.png)
 <br></details>
 
-### 2£©Debug
+### 2ï¼‰Debug
 
 <details>
 <summary>Click to expand/collapse<img src="https://media.giphy.com/media/WUlplcMpOCEmTGBtBW/giphy.gif" width="30"></summary>
@@ -223,11 +223,11 @@ int main()
 ![alt text](./docs/key_value_log.png)
 <br></details>
 
-## ? Ohter
+## âš¡ Ohter
 - This project was developed based on some issues I encountered with button drivers during my actual development work, drawing inspiration from another project (see reference link). Previously, I mentioned the advantages of this module. Now, let me discuss areas that need improvement: For representing combinations of multiple buttons, there is currently no elegant solution. I plan to refine this aspect when I have further ideas. Finally, I'd like to thank my colleague [shawnfeng0](https://github.com/shawnfeng0) for his help and thoughts, as well as anyone who is currently using this module. I welcome everyone to join in the development and improvement!
 - ore advanced usage examples can be found in [examples](./examples/README.md)
 
-## ? Reference links
+## ðŸ’¬ Reference links
 - [MultiButton](https://github.com/0x1abin/MultiButton)
 - [FlexibleButton](https://github.com/murphyzhao/FlexibleButton/tree/master)
 - [armfly](https://www.armbbs.cn/forum.php?mod=viewthread&tid=111527&highlight=%B0%B4%BC%FC)
