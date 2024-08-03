@@ -1,149 +1,121 @@
-# EmbeddedButton
-## 简介
-EmbeddedButton是一个轻量级简单易用的嵌入式按键驱动模块，可无限拓展按键，支持多连击、长按、短按长按等多种按键事件；该模块通过异步回调方式来简化程序结构，根据几个简单原则完成了整个代码逻辑的支撑。
+<h1 align="center">EmbeddedButton</h1>
 
-## 使用方法
-1.定义按键实体
+<p align="center">
+<a href="https://github.com/530china/EmbeddedButton/blob/master/LICENSE" target="blank">
+<img src="https://img.shields.io/github/license/rahuldkjain/github-profile-readme-generator?style=flat-square" alt="github-profile-readme-generator license" />
+</a>
+<a href="https://github.com/530china/EmbeddedButton/stargazers" target="blank">
+<img src="https://img.shields.io/github/stars/rahuldkjain/github-profile-readme-generator?style=flat-square" alt="github-profile-readme-generator stars"/>
+</a>
+<a href="https://github.com/530china/EmbeddedButton/issues" target="blank">
+<img src="https://img.shields.io/github/issues/rahuldkjain/github-profile-readme-generator?style=flat-square" alt="github-profile-readme-generator issues"/>
+</a>
+<a href="https://github.com/530china/EmbeddedButton/pulls" target="blank">
+<img src="https://img.shields.io/github/issues-pr/rahuldkjain/github-profile-readme-generator?style=flat-square" alt="github-profile-readme-generator pull-requests"/>
+</a>
+</p>
 
-```c
-struct button_obj_t button1;
-```
-2.建立键值映射表(设置回调事件)
+ <p text-align="">
+    <a href="./docs/README_zh-CN.md">[简体中文]</a>
+</p>
 
-```c
-const key_value_match_map_t button1_map[] =
-{
-    {
-        .tar_result = SINGLE_CLICK_KV,
-        .kv_func_cb = single_click_handle
-    },
-    {
-        .tar_result = DOUBLE_CLICK_KV,
-        .kv_func_cb = double_click_handle
-    },
-    {
-        .tar_result = LONG_PRESEE_START,
-        .kv_func_cb = long_press_handle
-    },
-    {
-        .tar_result = SINGLE_CLICK_THEN_LONG_PRESS_KV,
-        .kv_func_cb = single_click_then_long_press_handle
-    },
-    {
-        .operand = 0b1010101010,
-        .operator = KV_MATCH_OPERATOR_BITWISE_AND,
-        .tar_result = 0b1010101010,
-        .kv_func_cb = quintuple_click_handle
-    }
-};
-```
-3.初始化按键对象，参数含义分别为
+<h2>? Introduction</h2>
+EmbeddedButton is a lightweight and easy-to-use embedded key driver module that allows for unlimited expansion of buttons;
 
-- 按键实体
-- 绑定按键的GPIO电平读取接口**read_button1_pin()**
-- 设置有效触发电平
-- 按键ID
-- 键值映射表
-- 键值映射表大小
-```c
-button_init(&button1, read_button1_pin, 0, 0, button1_map, ARRAY_SIZE(button1_map));
-```
+- Supports multiple types of key events, including multi-tap, long press, short press followed by long press, and more；
+- The module implements the entire code logic based on a few simple principles;
+- Core processing adopts a data-driven approach, supporting bitwise operations for key value matching. It only includes basic key value definitions internally, while other key values' meanings are defined by users through **configuring key value matching rules**, without the need to modify the code intrusively, providing great flexibility.；
 
-4.启动按键
+## ? Feature
 
-```c
-button_start(&button1);
-```
+> 1.Relying on just a few simple principles, it supports the entire logic for button judgment.
+- As long as the key value is non-zero,tick++
+- Whenever the button state changes, update the key value once（**__append_bit()**）,and reset the tick(to ensure the tick represents the time of press or release)
+- The length of the tick time and the button release are used as criteria to determine the end of a state, which enables good implementation of operations such as short press and long press.；
 
-5.设置一个5ms间隔的定时器循环调用按键后台处理函数
+> 2.Implemented in C language, it cleverly uses bitwise operations to represent each button's key value in binary form, where 1 indicates a press and 0 indicates a release.
 
-```c
-while(1) {
-    ...
-    if(timer_ticks == 5) {
-        timer_ticks = 0;
-
-        button_ticks();
-    }
-}
-```
-
-## 特性
-
-> 1.依靠简单几个原则，支持起整个按键判断逻辑
-- 只要键值非零，时间tick++
-- 只要按键状态发生变化，改变一次键值（**__append_bit()**），tick时间清零（确保tick为按下或抬起的时间）
-- 以tick时间的长短及按键抬起作为一次状态结束的判断依据，可以很好的实现短按长按等操作；
-
-> 2.使用C语言实现，巧妙利用位运算来实现每个按键键值的二进制记录表示，1代表按下，0代表松开
-
-键值 | 说明
+key value | means
 --- | ---
-0b0 | 未按下
-0b010 | 完一次单击事件
-0b01010 | 双击
-0b01010...n | n连击
-0b011 | 长按开始事件
-0b0111| 长按保持事件
-0b01110|长按结束事件
-0b01011|短按长按事件
-0b0101011 | 双击长按事件
-0b01010..n11 | n连击长按事件
+0b0 | Not pressing the button
+0b010 | Single click
+0b01010 | Double click
+0b01010...n |  Repeat n click
+0b011 | Long press start
+0b0111| Long press hold
+0b01110|Long press finish
+0b01011|Single click then long press
+0b0101011 | Double click then long press
+0b01010..n11 | repeat n click then long press
 
-> 3.利用数据驱动思想完成对应按键事件的调用：
+> 3.Core processing adopts a data-driven approach, supporting bitwise operations for key value matching:
+- Critical data structure: the key value matching rule configuration table:
 ```c
 typedef struct {
-    key_value_type_t operand;
-    kv_match_operator_type_t operator;
-    key_value_type_t tar_result;
-    void (*kv_func_cb)(void*);
+    key_value_type_t operand;           // operand
+    kv_match_operator_type_t operator;  // operator
+    key_value_type_t tar_result;        // tar result
+    void (*kv_func_cb)(void*);          // Callback functions called upon matching.
 } key_value_match_map_t;
 
+```
+- Critical algorithms:
+```c
+key_value_type_t operand_origin = button->kv_match_map_ptr[i].operand;
+key_value_type_t operand_result = button->kv_match_map_ptr[i].operand;
+kv_match_operator_type_t operator =button->kv_match_map_ptr[i].operator;
+key_value_type_t tar_result = button->kv_match_map_ptr[i].tar_result;
 
-for(size_t i = 0; i < button->map_size; i++) {
-    if(button->kv_match_map_ptr[i].kv_func_cb == NULL)
-        continue;
+if(operator == KV_MATCH_OPERATOR_NULL)
+    operand_result = button->key_value;
+else if(operator & KV_MATCH_OPERATOR_BITWISE_AND)
+    operand_result = (operand_origin & button->key_value);
+else if(operator & KV_MATCH_OPERATOR_BITWISE_OR)
+    operand_result = (operand_origin | button->key_value);
+else if(operator & KV_MATCH_OPERATOR_BITWISE_NOT)
+    operand_result = ~(button->key_value);
+else if(operator & KV_MATCH_OPERATOR_BITWISE_XOR)
+    operand_result = (operand_origin ^ button->key_value);
 
-    key_value_type_t operand_origin = button->kv_match_map_ptr[i].operand;
-    key_value_type_t operand_result = button->kv_match_map_ptr[i].operand;
-    kv_match_operator_type_t operator =button->kv_match_map_ptr[i].operator;
-    key_value_type_t tar_result = button->kv_match_map_ptr[i].tar_result;
-
-    if(operator == KV_MATCH_OPERATOR_NULL)
-        operand_result = button->key_value;
-    else if(operator & KV_MATCH_OPERATOR_BITWISE_AND)
-        operand_result = (operand_origin & button->key_value);
-    else if(operator & KV_MATCH_OPERATOR_BITWISE_OR)
-        operand_result = (operand_origin | button->key_value);
-    else if(operator & KV_MATCH_OPERATOR_BITWISE_NOT)
-        operand_result = ~(button->key_value);
-    else if(operator & KV_MATCH_OPERATOR_BITWISE_XOR)
-        operand_result = (operand_origin ^ button->key_value);
-
-    if(operand_result == tar_result)
-    {
-        button->kv_match_map_ptr[i].kv_func_cb(button);
-    }
+if(operand_result == tar_result)
+{
+    button->kv_match_map_ptr[i].kv_func_cb(button);
 }
 ```
 
-> 4.基于面向对象方式设计思路，每个按键对象单独用一份数据结构管理
-
-
-## Examples
-
+- Supported operators:
 ```c
+#define KV_MATCH_OPERATOR_NULL             (0)      // null operator,only judge by(key_value == tar_result)?, this is default
+#define KV_MATCH_OPERATOR_BITWISE_AND      (1 << 0) // Bitwise AND operator,(operand & key_value == tar_result)?
+#define KV_MATCH_OPERATOR_BITWISE_OR       (1 << 1) // Bitwise OR operator,(operand | key_value == tar_result)?
+#define KV_MATCH_OPERATOR_BITWISE_NOT      (1 << 2) // Bitwise NOT operator,(~ key_value == tar_result)?
+#define KV_MATCH_OPERATOR_BITWISE_XOR      (1 << 2) // Bitwise XOR operator,(operand ^ key_value == tar_result)?
+```
+
+> 4.Designed based on an object-oriented approach, each button object is managed by its own instance of a data structure.
+
+## ? Getting Started
+
+### 1）How to use
+<details>
+<summary>Click to expand/collapse C code<img src="https://media.giphy.com/media/WUlplcMpOCEmTGBtBW/giphy.gif" width="30"></summary>
+
+- Using the callback method as an example:
+```c
+// 1.Include header file
 #include "embedded_button.h"
 
+// 2.Define button entities
 struct button_obj_t button1;
 
+// 3.Configure the GPIO level read interface
 uint8_t read_button_pin(uint8_t button_id)
 {
     // you can share the GPIO read function with multiple Buttons
     switch(button_id)
     {
         case 0:
-            return get_button1_value(); //Require self implementation
+            return get_button1_value(); // User-implemented
             break;
 
         default:
@@ -154,6 +126,7 @@ uint8_t read_button_pin(uint8_t button_id)
     return 0;
 }
 
+// 4. Configure key value matching rules (set up callback events)
 void single_click_handle(void* btn)
 {
     //do something...
@@ -214,11 +187,21 @@ const key_value_match_map_t button1_map[] =
 
 int main()
 {
+/************************************************
+****5.Initialize button objects, where the parameter means:
+****
+****- Button entities
+****- Bind the GPIO level read interface for the button**read_button1_pin()**
+****- Set the effective trigger level"
+****- Button ID
+****- Key value matching rule configuration table
+****- Size of Key value matching rule configuration table
+*************************************************/
     button_init(&button1, read_button_pin, 0, 0, button1_map, ARRAY_SIZE(button1_map));
+    // 6.Button start
     button_start(&button1);
 
-    //make the timer invoking the button_ticks() interval 5ms.
-    //This function is implemented by yourself.
+    // 7. Set up a timer with a 5ms interval to periodically call the button background processing function **button_ticks()**
     __timer_start(button_ticks, 0, 5);
 
     while(1)
@@ -226,11 +209,25 @@ int main()
 }
 ```
 ![Alt text](image.png)
+<br></details>
 
-## 其他
-- 本项目基于本人实际开发中遇到的一些按键驱动使用体验问题，在他人项目（见参考链接）的思想基础上，开发的此按键驱动模块，之前提到了本模块的优势，下面说下有待改进的地方：对于多按键时组合按键的表示方式，目前还没有想到比较优雅的实现方式，后续有头绪后会进一步改进，补齐这一环。最后，感谢帮助思考我的小伙伴[shawnfeng0](https://github.com/shawnfeng0)以及正在使用此模块的小伙伴，欢迎一起开发改进！
+### 2）Debug
 
-## 参考链接
+<details>
+<summary>Click to expand/collapse<img src="https://media.giphy.com/media/WUlplcMpOCEmTGBtBW/giphy.gif" width="30"></summary>
+
+- Defining the **EB_DEBUG_PRINTF** macro will enable key value printing, for example, as shown below, you need to replace printf with your own print function:
+```c
+#define EB_DEBUG_PRINTF printf
+```
+![alt text](./docs/key_value_log.png)
+<br></details>
+
+## ? Ohter
+- This project was developed based on some issues I encountered with button drivers during my actual development work, drawing inspiration from another project (see reference link). Previously, I mentioned the advantages of this module. Now, let me discuss areas that need improvement: For representing combinations of multiple buttons, there is currently no elegant solution. I plan to refine this aspect when I have further ideas. Finally, I'd like to thank my colleague [shawnfeng0](https://github.com/shawnfeng0) for his help and thoughts, as well as anyone who is currently using this module. I welcome everyone to join in the development and improvement!
+- ore advanced usage examples can be found in [examples](./examples/README.md)
+
+## ? Reference links
 - [MultiButton](https://github.com/0x1abin/MultiButton)
 - [FlexibleButton](https://github.com/murphyzhao/FlexibleButton/tree/master)
-- [安富莱按键FIFO思想](https://www.armbbs.cn/forum.php?mod=viewthread&tid=111527&highlight=%B0%B4%BC%FC)
+- [armfly](https://www.armbbs.cn/forum.php?mod=viewthread&tid=111527&highlight=%B0%B4%BC%FC)

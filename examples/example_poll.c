@@ -33,8 +33,8 @@ int main()
 
     while(1)
     {
-        if(btn1_event_val != get_button_event(&button1)) {
-            btn1_event_val = get_button_event(&button1);
+        if(btn1_event_val != get_button_key_value(&button1)) {
+            btn1_event_val = get_button_key_value(&button1);
 
             if(btn1_event_val == SINGLE_CLICK_KV) {
                 //do something

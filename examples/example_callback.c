@@ -1,7 +1,7 @@
 #include "embedded_button.h"
 
 enum button_id_e {
-    btn1_id,
+    btn1_id = 0,
     btn2_id,
 };
 
@@ -55,8 +55,40 @@ void single_click_then_long_press_handle(void* btn)
 void quintuple_click_handle(void* btn)
 {
     //do something...
-    if(check_is_repeat_click_mode(btn)) // To implement the logic where any key press that occurs five or more times in succession is treated as a five-hit press.
+    if(check_is_repeat_click_mode(btn))
+    {// To implement the logic where any key press that occurs five or more times in succession is treated as a five-hit press.
         printf("/****quintuple click****/\r\n");
+    }
+
+}
+
+void repeat_click_handle(void* btn)
+{
+    //do something...
+    if(check_is_repeat_click_mode(btn))
+    {
+        printf("/****repeat click****/\r\n");
+
+        if(get_button_key_value(&button2) == 0b1010)
+        {
+            printf("/****button2 double click****/\r\n");
+        }
+
+        if(get_button_key_value(&button2) == 0b101010)
+        {
+            printf("/****button2 triple click****/\r\n");
+        }
+
+        if(get_button_key_value(&button2) == 0b10101010)
+        {
+            printf("/****button2 quadruple click****/\r\n");
+        }
+    }
+}
+
+void filter_ending_with_long_press_handle(void* btn)
+{
+    printf("/****an event ending with a long press on a key****/\r\n");
 }
 
 const key_value_match_map_t button1_map[] =
@@ -85,12 +117,30 @@ const key_value_match_map_t button1_map[] =
     }
 };
 
+const key_value_match_map_t button2_map[] =
+{
+    {
+        .operand = 0b1010,
+        .operator = KV_MATCH_OPERATOR_BITWISE_AND,
+        .tar_result = 0b1010,
+        .kv_func_cb = repeat_click_handle
+    },
+    {
+        .operand = 0b1111,
+        .operator = KV_MATCH_OPERATOR_BITWISE_AND,
+        .tar_result = 0b1110,
+        .kv_func_cb = filter_ending_with_long_press_handle
+    }
+};
+
 
 int main()
 {
     button_init(&button1, read_button_pin, 0, btn1_id, button1_map, ARRAY_SIZE(button1_map));
-
     button_start(&button1);
+
+    button_init(&button2, read_button_pin, 0, btn2_id, button2_map, ARRAY_SIZE(button2_map));
+    button_start(&button2);
 
     //make the timer invoking the button_ticks() interval 5ms.
     //This function is implemented by yourself.
