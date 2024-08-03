@@ -15,47 +15,47 @@
 </a>
 </p>
 
-<h2>? ���</h2>
-EmbeddedButton��һ�������������õ�Ƕ��ʽ��������ģ�飬��������չ����;
+<h2>👋 简介</h2>
+EmbeddedButton是一个轻量级简单易用的嵌入式按键驱动模块，可无限拓展按键;
 
-- ֧�ֶ��������������̰������ȶ��ְ����¼���
-- ģ��ͨ��������ԭ����������������߼���֧��;
-- ���Ĵ�����ȡ����������ʽ��֧��λ�����ֵƥ�䣬�����û�����ֵ���壬������ֵ�������û�ͨ��**���ü�ֵƥ�����**���ж��壬����������ʽ�޸Ĵ��룬����Լ�ǿ��
+- 支持多连击、长按、短按长按等多种按键事件；
+- 模块通过几个简单原则完成了整个代码逻辑的支撑;
+- 核心处理采取数据驱动方式，支持位运算键值匹配，仅内置基本键值定义，其他键值含义由用户通过**配置键值匹配规则**自行定义，而不用侵入式修改代码，灵活性极强；
 
-## ? ����
+## 🌱 特性
 
-> 1.�����򵥼���ԭ��֧�������������ж��߼�
-- ֻҪ��ֵ���㣬ʱ��tick++
-- ֻҪ����״̬�����仯���ı�һ�μ�ֵ��**__append_bit()**����tickʱ�����㣨ȷ��tickΪ���»�̧���ʱ�䣩
-- ��tickʱ��ĳ��̼�����̧����Ϊһ��״̬�������ж����ݣ����Ժܺõ�ʵ�ֶ̰������Ȳ�����
+> 1.依靠简单几个原则，支持起整个按键判断逻辑
+- 只要键值非零，时间tick++
+- 只要按键状态发生变化，改变一次键值（**__append_bit()**），tick时间清零（确保tick为按下或抬起的时间）
+- 以tick时间的长短及按键抬起作为一次状态结束的判断依据，可以很好的实现短按长按等操作；
 
-> 2.ʹ��C����ʵ�֣���������λ������ʵ��ÿ��������ֵ�Ķ����Ƽ�¼��ʾ��1�������£�0�����ɿ�
+> 2.使用C语言实现，巧妙利用位运算来实现每个按键键值的二进制记录表示，1代表按下，0代表松开
 
-��ֵ | ˵��
+键值 | 说明
 --- | ---
-0b0 | δ����
-0b010 | ����
-0b01010 | ˫��
-0b01010...n | n����
-0b011 | ������ʼ
-0b0111| ��������
-0b01110|��������
-0b01011|�̰�Ȼ�󳤰�
-0b0101011 | ˫��Ȼ�󳤰�
-0b01010..n11 | n����Ȼ�󳤰�
+0b0 | 未按下
+0b010 | 单击
+0b01010 | 双击
+0b01010...n | n连击
+0b011 | 长按开始
+0b0111| 长按保持
+0b01110|长按结束
+0b01011|短按然后长按
+0b0101011 | 双击然后长按
+0b01010..n11 | n连击然后长按
 
-> 3.���Ĵ�����ȡ����������ʽ��֧��λ�����ֵƥ�䣺
-- �ؼ����ݽṹ����ֵƥ��������ñ���
+> 3.核心处理采取数据驱动方式，支持位运算键值匹配：
+- 关键数据结构，键值匹配规则配置表：
 ```c
 typedef struct {
-    key_value_type_t operand;           // ������
-    kv_match_operator_type_t operator;  // ������
-    key_value_type_t tar_result;        // Ŀ����
-    void (*kv_func_cb)(void*);          // ����ƥ�����õĻص�����
+    key_value_type_t operand;           // 操作数
+    kv_match_operator_type_t operator;  // 操作符
+    key_value_type_t tar_result;        // 目标结果
+    void (*kv_func_cb)(void*);          // 符合匹配后调用的回调函数
 } key_value_match_map_t;
 
 ```
-- �ؼ��㷨��
+- 关键算法：
 ```c
 key_value_type_t operand_origin = button->kv_match_map_ptr[i].operand;
 key_value_type_t operand_result = button->kv_match_map_ptr[i].operand;
@@ -79,39 +79,39 @@ if(operand_result == tar_result)
 }
 ```
 
-- ֧�ֵĲ�������
+- 支持的操作符：
 ```c
-#define KV_MATCH_OPERATOR_NULL             (0)      // �޲���������ͨ��(key_value == tar_result)?�ж�, Ĭ�������
-#define KV_MATCH_OPERATOR_BITWISE_AND      (1 << 0) // ��λ���������(operand & key_value == tar_result)?
-#define KV_MATCH_OPERATOR_BITWISE_OR       (1 << 1) // ��λ���������(operand | key_value == tar_result)?
-#define KV_MATCH_OPERATOR_BITWISE_NOT      (1 << 2) // ��λȡ����������(~ key_value == tar_result)?
-#define KV_MATCH_OPERATOR_BITWISE_XOR      (1 << 2) // ��λ����������(operand ^ key_value == tar_result)?
+#define KV_MATCH_OPERATOR_NULL             (0)      // 无操作符，仅通过(key_value == tar_result)?判断, 默认是这个
+#define KV_MATCH_OPERATOR_BITWISE_AND      (1 << 0) // 按位与操作符，(operand & key_value == tar_result)?
+#define KV_MATCH_OPERATOR_BITWISE_OR       (1 << 1) // 按位或操作符，(operand | key_value == tar_result)?
+#define KV_MATCH_OPERATOR_BITWISE_NOT      (1 << 2) // 按位取反操作符，(~ key_value == tar_result)?
+#define KV_MATCH_OPERATOR_BITWISE_XOR      (1 << 2) // 按位异或操作符，(operand ^ key_value == tar_result)?
 ```
 
-> 4.�����������ʽ���˼·��ÿ���������󵥶���һ�����ݽṹ����
+> 4.基于面向对象方式设计思路，每个按键对象单独用一份数据结构管理
 
-## ? ���ʳ��
+## 📋 如何食用
 
-### 1��ʹ��
+### 1）使用
 <details>
-<summary>���չ��/�۵�C����<img src="https://media.giphy.com/media/WUlplcMpOCEmTGBtBW/giphy.gif" width="30"></summary>
+<summary>点击展开/折叠C代码<img src="https://media.giphy.com/media/WUlplcMpOCEmTGBtBW/giphy.gif" width="30"></summary>
 
-- ��ʹ��callback��ʽΪ����
+- 以使用callback方式为例：
 ```c
-// 1.����ͷ�ļ�
+// 1.包含头文件
 #include "embedded_button.h"
 
-// 2.���尴��ʵ��
+// 2.定义按键实体
 struct button_obj_t button1;
 
-// 3.GPIO��ƽ��ȡ�ӿ�����
+// 3.GPIO电平读取接口设置
 uint8_t read_button_pin(uint8_t button_id)
 {
     // you can share the GPIO read function with multiple Buttons
     switch(button_id)
     {
         case 0:
-            return get_button1_value(); // �û�����ʵ��
+            return get_button1_value(); // 用户自行实现
             break;
 
         default:
@@ -122,7 +122,7 @@ uint8_t read_button_pin(uint8_t button_id)
     return 0;
 }
 
-// 4. ���ü�ֵƥ�����(���ûص��¼�)
+// 4. 配置键值匹配规则(设置回调事件)
 void single_click_handle(void* btn)
 {
     //do something...
@@ -184,20 +184,20 @@ const key_value_match_map_t button1_map[] =
 int main()
 {
 /************************************************
-****5.��ʼ���������󣬲�������ֱ�Ϊ
+****5.初始化按键对象，参数含义分别为
 ****
-****- ����ʵ��
-****- �󶨰�����GPIO��ƽ��ȡ�ӿ�**read_button1_pin()**
-****- ������Ч������ƽ
-****- ����ID
-****- ��ֵƥ��������ñ�
-****- ��ֵƥ��������ñ���С
+****- 按键实体
+****- 绑定按键的GPIO电平读取接口**read_button1_pin()**
+****- 设置有效触发电平
+****- 按键ID
+****- 键值匹配规则配置表
+****- 键值匹配规则配置表大小
 *************************************************/
     button_init(&button1, read_button_pin, 0, 0, button1_map, ARRAY_SIZE(button1_map));
-    // 6.��������
+    // 6.启动按键
     button_start(&button1);
 
-    // 7. ����һ��5ms����Ķ�ʱ��ѭ�����ð�����̨�������� button_ticks()
+    // 7. 设置一个5ms间隔的定时器循环调用按键后台处理函数 button_ticks()
     __timer_start(button_ticks, 0, 5);
 
     while(1)
@@ -207,23 +207,23 @@ int main()
 ![Alt text](image.png)
 <br></details>
 
-### 2������
+### 2）调试
 
 <details>
-<summary>���չ��/�۵�<img src="https://media.giphy.com/media/WUlplcMpOCEmTGBtBW/giphy.gif" width="30"></summary>
+<summary>点击展开/折叠<img src="https://media.giphy.com/media/WUlplcMpOCEmTGBtBW/giphy.gif" width="30"></summary>
 
-- ����EB_DEBUG_PRINTF��󽫻Ὺ����ֵ��ӡ���������棬��Ҫ��printf������Ĵ�ӡ������
+- 定义EB_DEBUG_PRINTF宏后将会开启键值打印，例如下面，需要将printf换成你的打印函数：
 ```c
 #define EB_DEBUG_PRINTF printf
 ```
 ![alt text](key_value_log.png)
 <br></details>
 
-## ? ����
-- ����Ŀ���ڱ���ʵ�ʿ�����������һЩ��������ʹ���������⣬��������Ŀ�����ο����ӣ���˼������ϣ������Ĵ˰�������ģ�飬֮ǰ�ᵽ�˱�ģ������ƣ�����˵���д��Ľ��ĵط������ڶఴ��ʱ��ϰ����ı�ʾ��ʽ��Ŀǰ��û���뵽�Ƚ����ŵ�ʵ�ַ�ʽ��������ͷ������һ���Ľ���������һ������󣬸�л����˼���ҵ�С���[shawnfeng0](https://github.com/shawnfeng0)�Լ�����ʹ�ô�ģ���С��飬��ӭһ�𿪷��Ľ���
-- ����߼��÷��� [examples](../examples/README.md)
+## ⚡ 其他
+- 本项目基于本人实际开发中遇到的一些按键驱动使用体验问题，在他人项目（见参考链接）的思想基础上，开发的此按键驱动模块，之前提到了本模块的优势，下面说下有待改进的地方：对于多按键时组合按键的表示方式，目前还没有想到比较优雅的实现方式，后续有头绪后会进一步改进，补齐这一环。最后，感谢帮助思考我的小伙伴[shawnfeng0](https://github.com/shawnfeng0)以及正在使用此模块的小伙伴，欢迎一起开发改进！
+- 更多高级用法见 [examples](../examples/README.md)
 
-## ? �ο�����
+## 💬 参考链接
 - [MultiButton](https://github.com/0x1abin/MultiButton)
 - [FlexibleButton](https://github.com/murphyzhao/FlexibleButton/tree/master)
-- [����������FIFO˼��](https://www.armbbs.cn/forum.php?mod=viewthread&tid=111527&highlight=%B0%B4%BC%FC)
+- [安富莱按键FIFO思想](https://www.armbbs.cn/forum.php?mod=viewthread&tid=111527&highlight=%B0%B4%BC%FC)
