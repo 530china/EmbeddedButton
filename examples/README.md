@@ -1,5 +1,5 @@
-# ¸ß¼¶ÓÃ·¨Ê¾Àı
+# é«˜çº§ç”¨æ³•ç¤ºä¾‹
 
-- ´óÓÚµÈÓÚnÁ¬»÷°´nÁ¬»÷´¦Àí,¼û[example_callback.c](./example_callback.c)ÖĞµÄ``quintuple_click_handle``º¯ÊıºÍÆäÆ¥Åä¹æÔò£»
-- Á¬»÷ÊÂ¼şÈç¹ûÖ»ÏëÍ¨¹ıÒ»¸ö»Øµ÷´¦Àí,²»ÏëÃ¿Ò»¸öÁ¬½Ó¶¼×¢²áÒ»¸ö»Øµ÷,¼û[example_callback.c](./example_callback.c)ÖĞ``repeat_click_handle``º¯ÊıºÍÆäÆ¥Åä¹æÔò;
-- ¼üÖµÒÔ³¤°´´¦Àí¾Í»á´¥·¢µÄÊÂ¼ş£¨°üÀ¨¶Ì°´³¤°´¡¢µ¥´¿³¤°´£©,¼û[example_callback.c](./example_callback.c)ÖĞ``filter_ending_with_long_press_handle``º¯ÊıºÍÆäÆ¥Åä¹æÔò£»
+- å¤§äºç­‰äºnè¿å‡»æŒ‰nè¿å‡»å¤„ç†,è§[example_callback.c](./example_callback.c)ä¸­çš„``quintuple_click_handle``å‡½æ•°å’Œå…¶åŒ¹é…è§„åˆ™ï¼›
+- è¿å‡»äº‹ä»¶å¦‚æœåªæƒ³é€šè¿‡ä¸€ä¸ªå›è°ƒå¤„ç†,ä¸æƒ³æ¯ä¸€ä¸ªè¿æ¥éƒ½æ³¨å†Œä¸€ä¸ªå›è°ƒ,è§[example_callback.c](./example_callback.c)ä¸­``repeat_click_handle``å‡½æ•°å’Œå…¶åŒ¹é…è§„åˆ™;
+- é”®å€¼ä»¥é•¿æŒ‰ç»“æŸå°±ä¼šè§¦å‘çš„äº‹ä»¶ï¼ˆåŒ…æ‹¬çŸ­æŒ‰é•¿æŒ‰ã€å•çº¯é•¿æŒ‰ï¼‰,è§[example_callback.c](./example_callback.c)ä¸­``filter_ending_with_long_press_handle``å‡½æ•°å’Œå…¶åŒ¹é…è§„åˆ™ï¼›
