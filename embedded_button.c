@@ -39,7 +39,7 @@ void button_init(struct button_obj_t* button            ,       \
   * @param  button: the button button strcut.
   * @retval button key value.
   */
-key_value_type_t get_button_event(struct button_obj_t* button)
+key_value_type_t get_button_key_value(struct button_obj_t* button)
 {
     return (key_value_type_t)(button->key_value);
 }

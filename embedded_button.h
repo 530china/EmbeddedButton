@@ -68,7 +68,7 @@ void button_init(struct button_obj_t* button            ,       \
 int  button_start(struct button_obj_t* handle);
 void button_stop(struct button_obj_t* handle);
 void button_ticks(void);
-key_value_type_t get_button_event(struct button_obj_t* button);
+key_value_type_t get_button_key_value(struct button_obj_t* button);
 uint8_t check_is_repeat_click_mode(struct button_obj_t* button);
 
 #endif
