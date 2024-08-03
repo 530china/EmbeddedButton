@@ -225,7 +225,7 @@ int main()
 
 ## ⚡ Ohter
 - This project was developed based on some issues I encountered with button drivers during my actual development work, drawing inspiration from another project (see reference link). Previously, I mentioned the advantages of this module. Now, let me discuss areas that need improvement: For representing combinations of multiple buttons, there is currently no elegant solution. I plan to refine this aspect when I have further ideas. Finally, I'd like to thank my colleague [shawnfeng0](https://github.com/shawnfeng0) for his help and thoughts, as well as anyone who is currently using this module. I welcome everyone to join in the development and improvement!
-- ore advanced usage examples can be found in [examples](./examples/README.md)
+- More advanced usage examples can be found in [examples](./examples/README.md)
 
 ## 💬 Reference links
 - [MultiButton](https://github.com/0x1abin/MultiButton)
