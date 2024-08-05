@@ -20,7 +20,7 @@
 </p>
 
 <h2>👋 Introduction</h2>
-EmbeddedButton is a lightweight and easy-to-use embedded key driver module that allows for unlimited expansion of buttons;
+EmbeddedButton is a lightweight and user-friendly embedded button handling framework that allows for infinite expansion of buttons;
 
 - Supports multiple types of key events, including multi-tap, long press, short press followed by long press, and more；
 - The module implements the entire code logic based on a few simple principles;
