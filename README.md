@@ -183,7 +183,6 @@ const key_value_match_map_t button1_map[] =
         .kv_func_cb = quintuple_click_handle
     }
 };
-...
 
 int main()
 {
